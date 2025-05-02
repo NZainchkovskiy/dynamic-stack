@@ -15,7 +15,7 @@ interface DynamicHorizontalStackProps {
   gap?: number;
 }
 
-const THROTTLE_TIMEOUT = 300;
+const THROTTLE_TIMEOUT = 100;
 
 interface OverflowMenuProps {
   overflowItems: StackItem[];

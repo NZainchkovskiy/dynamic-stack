@@ -1,24 +1,42 @@
-import './App.css'
-import DynamicHorizontalStack from './components/DynamicStack'
+import "./App.css";
+import { DynamicHorizontalStack } from "./components/DynamicHorizontalStack";
+import { Box, Stack, Button } from "@mui/material";
+import HomeIcon from "@mui/icons-material/Home";
 
 function App() {
-  const items = Array.from({length: 20}, (_, i) => ({
+  const items = Array.from({ length: 10 }, (_, i) => ({
     id: i + 1,
-    content: <div style={{
-      width: '100px',
-      height: '100px',
-      backgroundColor: 'blue',
-      textAlign: 'center'
-    }}>Item {i + 1}</div>
+    content: (
+      <Button variant="contained" color="primary" startIcon={<HomeIcon />} sx={{ width: 150, textAlign: "center" }}>
+        Item {i + 1}
+      </Button>
+    ),
   }));
   return (
-    <>
-      <div style={{ width: '100vw', height: '100px', backgroundColor: 'red' }}>
+    <Stack
+      direction="row"
+      sx={{
+        width: "calc(100vw - 40px)",
+        m: 2,
+        height: "100px",
+        border: 1,
+        alignItems: "center",
+        gap: 2,
+      }}
+    >
+      <Stack direction="row">
+        <Box>Some text</Box>
+        <Box>Some text2</Box>
+      </Stack>
+      <Box flexGrow={1} sx={{ overflow: "hidden" }}>
         <DynamicHorizontalStack items={items} gap={8} />
-      </div>
-
-    </>
-  )
+      </Box>
+      <Stack direction="row">
+        <Box>Some text3</Box>
+        <Box>Some text4</Box>
+      </Stack>
+    </Stack>
+  );
 }
 
-export default App
+export default App;

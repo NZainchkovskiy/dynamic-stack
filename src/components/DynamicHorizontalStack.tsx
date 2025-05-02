@@ -75,10 +75,6 @@ export const DynamicHorizontalStack = (props: DynamicHorizontalStackProps) => {
 
   const itemWidths = useItemWidths(hiddenItemsRef, items);
 
-  // const [debouncedItemWidths, setDebouncedItemWidths] = useState(itemWidths);
-
-  // useDebounce(() => setDebouncedItemWidths(itemWidths), THROTTLE_TIMEOUT, [itemWidths]);
-
   useEffect(() => {
     if (itemWidths.length === 0 || containerWidth === 0) return;
 

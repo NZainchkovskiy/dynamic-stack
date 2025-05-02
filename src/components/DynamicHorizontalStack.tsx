@@ -1,27 +1,27 @@
 import type React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Box, Stack, Menu, MenuItem, IconButton } from "@mui/material";
 import { useItemWidths } from "../hooks/useItemWidths";
 import { useThrottledMeasure } from "../hooks/useThrottledMeasure";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 
-interface StackItem {
+interface IStackItem {
   id: string | number;
   content: React.ReactNode;
 }
 
-interface DynamicHorizontalStackProps {
-  items: StackItem[];
+interface IDynamicHorizontalStackProps {
+  items: IStackItem[];
   gap?: number;
 }
 
 const THROTTLE_TIMEOUT = 100;
 
-interface OverflowMenuProps {
-  overflowItems: StackItem[];
+interface IOverflowMenuProps {
+  overflowItems: IStackItem[];
 }
 
-const OverflowMenu: React.FC<OverflowMenuProps> = ({ overflowItems }) => {
+const OverflowMenu: React.FC<IOverflowMenuProps> = ({ overflowItems }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
 
@@ -65,48 +65,61 @@ const OverflowMenu: React.FC<OverflowMenuProps> = ({ overflowItems }) => {
   );
 };
 
-export const DynamicHorizontalStack = (props: DynamicHorizontalStackProps) => {
+export const DynamicHorizontalStack = (props: IDynamicHorizontalStackProps) => {
   const { items, gap = 8 } = props;
-  const [visibleItems, setVisibleItems] = useState<StackItem[]>([]);
-  const [overflowItems, setOverflowItems] = useState<StackItem[]>([]);
   const [containerRef, { width: containerWidth }] = useThrottledMeasure<HTMLDivElement>(THROTTLE_TIMEOUT);
   const [menuButtonRef, { width: menuWidth }] = useThrottledMeasure<HTMLDivElement>(THROTTLE_TIMEOUT);
   const hiddenItemsRef = useRef<HTMLDivElement>(null);
 
   const itemWidths = useItemWidths(hiddenItemsRef, items);
 
-  useEffect(() => {
-    if (itemWidths.length === 0 || containerWidth === 0) return;
+  let calculatedVisibleItems: IStackItem[] = [];
+  let calculatedOverflowItems: IStackItem[] = [];
 
+  if (itemWidths.length > 0 && containerWidth > 0) {
     let availableWidth = containerWidth;
-    let newVisibleCount = 0;
     let requiresMenu = false;
 
-    const totalItemsWidth = itemWidths.reduce((sum, width) => sum + width, 0) + (items.length - 1) * gap;
-    if (totalItemsWidth > containerWidth) {
-      availableWidth = containerWidth - (menuWidth || 30);
+    const effectiveMenuWidth = menuWidth > 0 ? menuWidth : 30;
+
+    const totalItemsWidth =
+      itemWidths.reduce((sum, width) => sum + width, 0) + (items.length > 0 ? (items.length - 1) * gap : 0);
+
+    if (totalItemsWidth > containerWidth && items.length > 0) {
+      availableWidth = containerWidth - effectiveMenuWidth;
       requiresMenu = true;
     }
 
     let accumulatedWidth = 0;
+    let visibleCount = 0;
     for (let i = 0; i < itemWidths.length; i++) {
-      const width = itemWidths[i];
-      if (accumulatedWidth + width + (i > 0 ? gap : 0) <= availableWidth - gap) {
-        accumulatedWidth += width + (i > 0 ? gap : 0);
-        newVisibleCount++;
+      const itemWidth = itemWidths[i];
+      const widthWithGap = itemWidth + (visibleCount > 0 ? gap : 0);
+
+      if (accumulatedWidth + widthWithGap <= availableWidth) {
+        accumulatedWidth += widthWithGap;
+        visibleCount++;
       } else {
         break;
       }
     }
 
-    if (requiresMenu && accumulatedWidth > availableWidth) {
-      newVisibleCount = Math.max(newVisibleCount - 1, 0);
+    if (requiresMenu && visibleCount === items.length) {
+      visibleCount = Math.max(0, items.length - 1);
     }
-    if (newVisibleCount !== visibleItems.length) {
-      setVisibleItems(items.slice(0, newVisibleCount));
-      setOverflowItems(items.slice(newVisibleCount));
+
+    if (requiresMenu && visibleCount === 0 && items.length > 0 && itemWidths[0] > availableWidth) {
+      visibleCount = 0;
     }
-  }, [itemWidths, visibleItems, gap, items, containerWidth, menuWidth]);
+
+    calculatedVisibleItems = items.slice(0, visibleCount);
+    calculatedOverflowItems = items.slice(visibleCount);
+  } else if (items.length > 0 && containerWidth <= 0) {
+    calculatedOverflowItems = items;
+  } else {
+    calculatedVisibleItems = [];
+    calculatedOverflowItems = items;
+  }
 
   return (
     <Box flexShrink={0} overflow="hidden">
@@ -121,16 +134,16 @@ export const DynamicHorizontalStack = (props: DynamicHorizontalStackProps) => {
           flexWrap: "nowrap",
         }}
       >
-        {visibleItems.map((item) => (
+        {calculatedVisibleItems.map((item) => (
           <Box key={item.id} display="flex" alignItems="center">
             {item.content}
           </Box>
         ))}
-        {overflowItems.length > 0 && (
+        {calculatedOverflowItems.length > 0 ? (
           <Box ref={menuButtonRef} sx={{ flexShrink: 0 }}>
-            <OverflowMenu overflowItems={overflowItems} />
+            <OverflowMenu overflowItems={calculatedOverflowItems} />
           </Box>
-        )}
+        ) : null}
       </Stack>
       <Box
         ref={hiddenItemsRef}

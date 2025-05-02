@@ -25,15 +25,15 @@ function App() {
       }}
     >
       <Stack direction="row">
-        <Box>Some text</Box>
-        <Box>Some text2</Box>
+        <Box sx={{ whiteSpace: "nowrap" }}>Some text</Box>
+        <Box sx={{ whiteSpace: "nowrap" }}>Some text2</Box>
       </Stack>
       <Box flexGrow={1} sx={{ overflow: "hidden" }}>
         <DynamicHorizontalStack items={items} gap={8} />
       </Box>
       <Stack direction="row">
-        <Box>Some text3</Box>
-        <Box>Some text4</Box>
+        <Box sx={{ whiteSpace: "nowrap" }}>Some text3</Box>
+        <Box sx={{ whiteSpace: "nowrap" }}>Some text4</Box>
       </Stack>
     </Stack>
   );
